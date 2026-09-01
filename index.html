@@ -173,17 +173,12 @@
     var curUser='',fails=0,blockUntil=0;
 
     function fmtTime(){
-      var now=new Date();
-      var utc=now.getTime()+now.getTimezoneOffset()*60000;
-      var bd=new Date(utc+3600000*6);
-      var h=bd.getHours(),ap=h>=12?'PM':'AM',h12=h%12||12;
-      var mi=String(bd.getMinutes()).padStart(2,'0');
-      var se=String(bd.getSeconds()).padStart(2,'0');
-      var dd=String(bd.getDate()).padStart(2,'0');
-      var mm=String(bd.getMonth()+1).padStart(2,'0');
-      var yy=bd.getFullYear();
+      var d=new Date();
+      var h=d.getUTCHours()+6,day=d.getUTCDate(),mo=d.getUTCMonth(),yr=d.getUTCFullYear();
+      if(h>=24){h-=24;day++;var dim=[31,(yr%4===0?29:28),31,30,31,30,31,31,30,31,30,31];if(day>dim[mo]){day=1;mo++;if(mo>11){mo=0;yr++;}}}
+      var ap=h>=12?'PM':'AM',h12=h%12||12;
       var mths=['','January','February','March','April','May','June','July','August','September','October','November','December'];
-      return String(h12).padStart(2,'0')+':'+mi+':'+se+' '+ap+', '+dd+' '+mths[parseInt(mm)]+' '+yy;
+      return String(h12).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')+':'+String(d.getUTCSeconds()).padStart(2,'0')+' '+ap+', '+String(day).padStart(2,'0')+' '+mths[mo+1]+' '+yr;
     }
 
     async function asyncFetch(url, opts, retries) {
