@@ -239,7 +239,7 @@
     async function doConfirm(){
       var b=document.getElementById('box-confirm');b.disabled=true;b.innerHTML='<span class="spin"></span>Saving...';
       var nm=localStorage.getItem('dm_name'),ts=fmtTime();
-      try{await asyncFetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:curUser,profileLink:'https://x.com/'+curUser.replace('@',''),timestamp:ts,teamName:nm})})}catch(e){alert('Save failed! Check connection.');}
+      try{await asyncFetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:curUser,profileLink:'https://x.com/'+curUser.replace('@',''),timestamp:ts,teamName:nm,key:localStorage.getItem('dm_key')})})}catch(e){alert('Save failed! Check connection.');}
       document.getElementById('box-safe').classList.add('hidden');document.getElementById('box-profile').href='https://x.com/'+curUser.replace('@','');document.getElementById('box-saved').classList.remove('hidden');updateHist(curUser,nm);b.disabled=false;b.textContent='Confirm';
     }
 
