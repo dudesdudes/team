@@ -186,6 +186,19 @@
       return String(h12).padStart(2,'0')+':'+mi+':'+se+' '+ap+', '+dd+' '+mths[parseInt(mm)]+' '+yy;
     }
 
+    async function asyncFetch(url, opts, retries) {
+      retries = retries || 3;
+      for (var i = 0; i < retries; i++) {
+        try {
+          var r = await fetch(url, opts);
+          return r;
+        } catch(e) {
+          if (i === retries - 1) throw e;
+          await new Promise(function(res) { setTimeout(res, 1000) });
+        }
+      }
+    }
+
     function show(id){document.getElementById('page-login').classList.add('hidden');document.getElementById('page-dash').classList.add('hidden');document.getElementById(id).classList.remove('hidden')}
     function hideBoxes(){['box-safe','box-no','box-saved'].forEach(function(id){document.getElementById(id).classList.add('hidden')})}
 
@@ -197,12 +210,12 @@
       document.getElementById('login-btn').disabled=true;
       document.getElementById('login-btn').innerHTML='<span class="spin"></span>Logging in...';
       try{
-        var r=await fetch(API+'?type=login&key='+encodeURIComponent(k),{mode:'cors',signal:AbortSignal.timeout(10000)});
+        var r=await asyncFetch(API+'?type=login&key='+encodeURIComponent(k),{mode:'cors',signal:AbortSignal.timeout(10000)});
         var d=await r.json();
         document.getElementById('login-btn').disabled=false;document.getElementById('login-btn').textContent='Login';
         if(d.valid){localStorage.setItem('dm_key',k);localStorage.setItem('dm_name',d.name);localStorage.setItem('dm_time',Date.now().toString());fails=0;localStorage.removeItem('dm_fails');localStorage.removeItem('dm_block');goDash();}
         else{fails++;localStorage.setItem('dm_fails',fails.toString());if(fails>=3){blockUntil=Date.now()+300000;localStorage.setItem('dm_block',blockUntil.toString());startBlock();}else{e.textContent='Wrong key. '+(3-fails)+' tries left.';}}
-      }catch(ex){document.getElementById('login-btn').disabled=false;document.getElementById('login-btn').textContent='Login';e.textContent='Network error!';}
+      }catch(ex){document.getElementById('login-btn').disabled=false;document.getElementById('login-btn').textContent='Login';e.textContent='Network error! Please try again.';}
     }
     function startBlock(){
       var b=document.getElementById('login-block'),t=document.getElementById('login-block-time');b.classList.remove('hidden');document.getElementById('login-btn').disabled=true;
@@ -215,16 +228,18 @@
       var u=document.getElementById('dash-user').value.trim(),btn=document.getElementById('dash-btn');
       if(!u)return;if(!u.startsWith('@'))u='@'+u;
       hideBoxes();btn.disabled=true;btn.innerHTML='<span class="spin"></span>Checking...';
-      try{var r=await fetch(API+'?type=username&value='+encodeURIComponent(u),{mode:'cors',signal:AbortSignal.timeout(10000)});var d=await r.json();btn.disabled=false;btn.textContent='Check';
+      try{
+        var r=await asyncFetch(API+'?type=username&value='+encodeURIComponent(u),{mode:'cors',signal:AbortSignal.timeout(10000)});
+        var d=await r.json();btn.disabled=false;btn.textContent='Check';
         if(d.exists){document.getElementById('box-by').textContent=d.teamName||'Unknown';document.getElementById('box-time').textContent=d.timestamp||'';document.getElementById('box-no').classList.remove('hidden');addHist(u,false,d.teamName);}
         else{curUser=u;document.getElementById('box-safe').classList.remove('hidden');addHist(u,true,null);}
-      }catch(e){btn.disabled=false;btn.textContent='Check';alert('Network error!');}
+      }catch(e){btn.disabled=false;btn.textContent='Check';alert('Network error! Please try again.');}
     }
 
     async function doConfirm(){
       var b=document.getElementById('box-confirm');b.disabled=true;b.innerHTML='<span class="spin"></span>Saving...';
       var nm=localStorage.getItem('dm_name'),ts=fmtTime();
-      try{await fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:curUser,profileLink:'https://x.com/'+curUser.replace('@',''),timestamp:ts,teamName:nm})})}catch(e){}
+      try{await asyncFetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:curUser,profileLink:'https://x.com/'+curUser.replace('@',''),timestamp:ts,teamName:nm})})}catch(e){alert('Save failed! Check connection.');}
       document.getElementById('box-safe').classList.add('hidden');document.getElementById('box-profile').href='https://x.com/'+curUser.replace('@','');document.getElementById('box-saved').classList.remove('hidden');updateHist(curUser,nm);b.disabled=false;b.textContent='Confirm';
     }
 
