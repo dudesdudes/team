@@ -174,8 +174,16 @@
 
     function fmtTime(){
       var now=new Date();
-      var p=now.toLocaleString('en-US',{timeZone:'Asia/Dhaka',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true,day:'2-digit',month:'long',year:'numeric'}).replace(',','');
-      return p;
+      var utc=now.getTime()+now.getTimezoneOffset()*60000;
+      var bd=new Date(utc+3600000*6);
+      var h=bd.getHours(),ap=h>=12?'PM':'AM',h12=h%12||12;
+      var mi=String(bd.getMinutes()).padStart(2,'0');
+      var se=String(bd.getSeconds()).padStart(2,'0');
+      var dd=String(bd.getDate()).padStart(2,'0');
+      var mm=String(bd.getMonth()+1).padStart(2,'0');
+      var yy=bd.getFullYear();
+      var mths=['','January','February','March','April','May','June','July','August','September','October','November','December'];
+      return String(h12).padStart(2,'0')+':'+mi+':'+se+' '+ap+', '+dd+' '+mths[parseInt(mm)]+' '+yy;
     }
 
     async function asyncFetch(url, opts, retries) {
